@@ -1,0 +1,32 @@
+# MongoDB Automation System Requirements
+# Core dependencies
+pymongo==4.6.1
+flask==3.0.0
+flask-socketio==5.3.6
+paramiko==3.4.0
+pillow==10.2.0
+fpdf==1.7.2
+websockets==12.0
+
+# Data processing and utilities
+numpy==1.26.3
+pandas==2.1.4
+python-dateutil==2.8.2
+
+# Web and API
+requests==2.31.0
+urllib3==2.1.0
+
+# System and monitoring
+psutil==5.9.6
+python-dotenv==1.0.0
+
+# Development and testing
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.11.0
+flake8==6.1.0
+
+# Optional: For enhanced monitoring
+prometheus-client==0.19.0
+grafana-api==1.0.3
