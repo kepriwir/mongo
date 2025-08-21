@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Cluster Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/dashboard.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-shield-lock"></i> MongoDB Cluster Dashboard
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                    <div id="loginError" class="alert alert-danger mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" style="display: none;">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <i class="bi bi-database"></i> MongoDB Cluster Dashboard
+                </a>
+                <div class="navbar-nav ms-auto">
+                    <span class="navbar-text me-3" id="connectionStatus">
+                        <i class="bi bi-circle-fill text-success"></i> Connected
+                    </span>
+                    <a class="nav-link" href="#" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container-fluid mt-3">
+            <!-- Status Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Replica Set Status</h6>
+                                    <h3 id="replicaSetStatus">-</h3>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-diagram-3 fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Active Nodes</h6>
+                                    <h3 id="activeNodes">-</h3>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-server fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Total Documents</h6>
+                                    <h3 id="totalDocuments">-</h3>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-file-text fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Replication Lag</h6>
+                                    <h3 id="replicationLag">-</h3>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-clock fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                        <i class="bi bi-speedometer2"></i> Overview
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="nodes-tab" data-bs-toggle="tab" data-bs-target="#nodes" type="button" role="tab">
+                        <i class="bi bi-server"></i> Nodes
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring" type="button" role="tab">
+                        <i class="bi bi-graph-up"></i> Monitoring
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="query-tab" data-bs-toggle="tab" data-bs-target="#query" type="button" role="tab">
+                        <i class="bi bi-search"></i> Query
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ssh-tab" data-bs-toggle="tab" data-bs-target="#ssh" type="button" role="tab">
+                        <i class="bi bi-terminal"></i> SSH
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config" type="button" role="tab">
+                        <i class="bi bi-gear"></i> Configuration
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content mt-3" id="mainTabsContent">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-diagram-3"></i> Cluster Topology</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="clusterTopology"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-graph-up"></i> Operations per Second</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="opsChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-clock"></i> Replication Lag</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped" id="replicationTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Node</th>
+                                                    <th>State</th>
+                                                    <th>Health</th>
+                                                    <th>Lag (ms)</th>
+                                                    <th>Last Optime</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nodes Tab -->
+                <div class="tab-pane fade" id="nodes" role="tabpanel">
+                    <div class="row" id="nodesContainer">
+                        <!-- Node cards will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Monitoring Tab -->
+                <div class="tab-pane fade" id="monitoring" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-memory"></i> Memory Usage</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="memoryChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-hdd"></i> Storage Usage</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="storageChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-activity"></i> Connection Stats</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="connectionsChart" height="150"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Query Tab -->
+                <div class="tab-pane fade" id="query" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-search"></i> Query Builder</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="queryForm">
+                                        <div class="mb-3">
+                                            <label for="queryNode" class="form-label">Target Node</label>
+                                            <select class="form-select" id="queryNode">
+                                                <option value="replica_set">Replica Set</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="queryCollection" class="form-label">Collection</label>
+                                            <select class="form-select" id="queryCollection">
+                                                <option value="employees">employees</option>
+                                                <option value="attendance">attendance</option>
+                                                <option value="payroll">payroll</option>
+                                                <option value="leaves">leaves</option>
+                                                <option value="documents">documents</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="queryText" class="form-label">Query (JSON)</label>
+                                            <textarea class="form-control" id="queryText" rows="10" placeholder='{"employment_status": "Active"}'></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-play-fill"></i> Execute Query
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-file-text"></i> Query Results</h5>
+                                    <div class="float-end">
+                                        <small id="queryStats" class="text-muted"></small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <pre id="queryResults" class="bg-light p-3" style="max-height: 500px; overflow-y: auto;">Execute a query to see results...</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SSH Tab -->
+                <div class="tab-pane fade" id="ssh" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-terminal"></i> SSH Commands</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="sshForm">
+                                        <div class="mb-3">
+                                            <label for="sshNode" class="form-label">Target Node</label>
+                                            <select class="form-select" id="sshNode"></select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="sshCommand" class="form-label">Command</label>
+                                            <input type="text" class="form-control" id="sshCommand" placeholder="ls -la">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-play-fill"></i> Execute
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="clearSSHOutput()">
+                                            <i class="bi bi-trash"></i> Clear
+                                        </button>
+                                    </form>
+                                    <div class="mt-3">
+                                        <h6>Quick Commands:</h6>
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="setSSHCommand('systemctl status mongod')">MongoDB Status</button>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="setSSHCommand('df -h')">Disk Usage</button>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="setSSHCommand('free -h')">Memory Usage</button>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="setSSHCommand('top -n 1 -b')">System Load</button>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="setSSHCommand('tail -n 50 /var/log/mongodb/mongod.log')">MongoDB Logs</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-terminal-fill"></i> Command Output</h5>
+                                </div>
+                                <div class="card-body">
+                                    <pre id="sshOutput" class="bg-dark text-light p-3" style="height: 400px; overflow-y: auto;">Ready for SSH commands...</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuration Tab -->
+                <div class="tab-pane fade" id="config" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-gear"></i> Cluster Configuration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="configForm">
+                                        <div class="mb-3">
+                                            <label for="replicaSetName" class="form-label">Replica Set Name</label>
+                                            <input type="text" class="form-control" id="replicaSetName" readonly>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Nodes Configuration</label>
+                                            <div id="nodesConfig"></div>
+                                        </div>
+                                        <button type="button" class="btn btn-primary" onclick="saveConfiguration()">
+                                            <i class="bi bi-save"></i> Save Configuration
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="loadConfiguration()">
+                                            <i class="bi bi-arrow-clockwise"></i> Reload
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="bi bi-file-code"></i> Raw Configuration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <textarea id="rawConfig" class="form-control" rows="20" style="font-family: monospace; font-size: 12px;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
