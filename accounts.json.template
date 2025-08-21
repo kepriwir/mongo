@@ -1,0 +1,43 @@
+{
+  "replicaSetName": "rs0",
+  "mongoVersion": "7.0",
+  "clusterAdmin": {
+    "username": "clusterAdmin",
+    "password": "ChangeMe-StrongPass!"
+  },
+  "nodes": [
+    {
+      "name": "mongo1",
+      "ip": "10.0.0.11",
+      "ssh_user": "ubuntu",
+      "ssh_password": "your-ssh-password",
+      "sudo_password": "your-sudo-password-or-same-as-ssh",
+      "ssh_port": 22,
+      "role": "primary"
+    },
+    {
+      "name": "mongo2",
+      "ip": "10.0.0.12",
+      "ssh_user": "ubuntu",
+      "ssh_password": "your-ssh-password",
+      "sudo_password": "your-sudo-password-or-same-as-ssh",
+      "ssh_port": 22,
+      "role": "secondary"
+    },
+    {
+      "name": "mongo3",
+      "ip": "10.0.0.13",
+      "ssh_user": "ubuntu",
+      "ssh_password": "your-ssh-password",
+      "sudo_password": "your-sudo-password-or-same-as-ssh",
+      "ssh_port": 22,
+      "role": "analytics"
+    }
+  ],
+  "paths": {
+    "dbPath": "/var/lib/mongo",
+    "logPath": "/var/log/mongodb/mongod.log",
+    "keyFile": "/etc/mongod.key"
+  }
+}
+
