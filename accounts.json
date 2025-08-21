@@ -1,0 +1,23 @@
+[
+  {
+    "ip": "192.168.1.101",
+    "port": 22,
+    "user": "ubuntu",
+    "password": "password1",
+    "role": "primary"
+  },
+  {
+    "ip": "192.168.1.102",
+    "port": 22,
+    "user": "ubuntu",
+    "password": "password2",
+    "role": "secondary"
+  },
+  {
+    "ip": "192.168.1.103",
+    "port": 22,
+    "user": "ubuntu",
+    "password": "password3",
+    "role": "analytics"
+  }
+]
