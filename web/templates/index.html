@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MongoDB Cluster Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    pre { max-height: 300px; overflow: auto; }
+    .lag-bad { color: #c00; font-weight: bold; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="/static/app.js"></script>
+  <script>window.addEventListener('DOMContentLoaded', () => { window.initDashboard(); });</script>
+  <body>
+    <main class="container">
+      <h2>MongoDB Cluster Dashboard</h2>
+      <article>
+        <h3>Replication Status</h3>
+        <div class="grid">
+          <div>
+            <table>
+              <thead>
+                <tr><th>Member</th><th>State</th><th>Optime</th><th>Lag (s)</th></tr>
+              </thead>
+              <tbody id="status-body"></tbody>
+            </table>
+          </div>
+          <div>
+            <canvas id="lagChart" height="140"></canvas>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <h3>Query Tester</h3>
+        <form id="query-form">
+          <select id="query-type">
+            <option value="employees_top">Top Companies by Employee Count</option>
+            <option value="recent_absent">Recent Absences</option>
+          </select>
+          <button type="submit">Run</button>
+        </form>
+        <pre id="query-output"></pre>
+      </article>
+
+      <article>
+        <h3>SSH Tools</h3>
+        <form id="ssh-form">
+          <input id="ssh-node" placeholder="node name (e.g., mongo1)" />
+          <select id="ssh-cmd">
+            <option value="uptime">uptime</option>
+            <option value="disk">df -h</option>
+            <option value="memory">free -h</option>
+            <option value="mongod">systemctl is-active mongod</option>
+            <option value="log_tail">tail mongod.log</option>
+          </select>
+          <button type="submit">Execute</button>
+        </form>
+        <pre id="ssh-output"></pre>
+      </article>
+
+      <article>
+        <h3>Configuration (accounts.json)</h3>
+        <button id="btn-load-config">Load</button>
+        <button id="btn-save-config">Save</button>
+        <textarea id="config-json" rows="16"></textarea>
+      </article>
+
+    </main>
+  </body>
+</head>
+</html>
+
