@@ -1,0 +1,74 @@
+{
+  "mongodb_cluster": {
+    "replica_set_name": "rs0",
+    "nodes": [
+      {
+        "id": 0,
+        "hostname": "mongo-primary",
+        "ip": "10.0.1.10",
+        "port": 27017,
+        "role": "primary",
+        "priority": 10,
+        "user": "admin",
+        "password": "AdminPass123!",
+        "ssh_user": "ubuntu",
+        "ssh_password": "UbuntuPass123!",
+        "ssh_key_path": "/root/.ssh/mongo_cluster_key"
+      },
+      {
+        "id": 1,
+        "hostname": "mongo-secondary1",
+        "ip": "10.0.1.11",
+        "port": 27017,
+        "role": "secondary",
+        "priority": 5,
+        "user": "admin",
+        "password": "AdminPass123!",
+        "ssh_user": "ubuntu",
+        "ssh_password": "UbuntuPass123!",
+        "ssh_key_path": "/root/.ssh/mongo_cluster_key"
+      },
+      {
+        "id": 2,
+        "hostname": "mongo-secondary2",
+        "ip": "10.0.1.12",
+        "port": 27017,
+        "role": "secondary",
+        "priority": 1,
+        "user": "admin",
+        "password": "AdminPass123!",
+        "ssh_user": "ubuntu",
+        "ssh_password": "UbuntuPass123!",
+        "ssh_key_path": "/root/.ssh/mongo_cluster_key"
+      }
+    ],
+    "auth": {
+      "keyfile_path": "/etc/mongodb-keyfile",
+      "keyfile_content": "mongodb_replica_set_key_2024_production_cluster_secure_auth_key_string_must_be_at_least_6_chars_long"
+    },
+    "directories": {
+      "data_dir": "/var/lib/mongodb",
+      "log_dir": "/var/log/mongodb",
+      "config_dir": "/etc/mongod"
+    },
+    "performance": {
+      "cache_size_gb": 2,
+      "max_connections": 1000,
+      "journal_enabled": true,
+      "oplog_size_mb": 1024
+    }
+  },
+  "hr_database": {
+    "name": "hr_management",
+    "collections": {
+      "companies": "companies",
+      "employees": "employees",
+      "attendance": "attendance",
+      "leaves": "leaves",
+      "payroll": "payroll",
+      "departments": "departments",
+      "positions": "positions",
+      "documents": "documents"
+    }
+  }
+}
