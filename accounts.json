@@ -1,0 +1,38 @@
+{
+  "nodes": [
+    {
+      "ip": "192.168.1.10",
+      "hostname": "mongo-primary",
+      "user": "admin",
+      "password": "admin123",
+      "role": "primary",
+      "port": 27017,
+      "ssh_user": "ubuntu",
+      "ssh_key_path": "~/.ssh/id_rsa"
+    },
+    {
+      "ip": "192.168.1.11", 
+      "hostname": "mongo-secondary1",
+      "user": "admin",
+      "password": "admin123",
+      "role": "secondary",
+      "port": 27017,
+      "ssh_user": "ubuntu",
+      "ssh_key_path": "~/.ssh/id_rsa"
+    },
+    {
+      "ip": "192.168.1.12",
+      "hostname": "mongo-secondary2", 
+      "user": "admin",
+      "password": "admin123",
+      "role": "secondary",
+      "port": 27017,
+      "ssh_user": "ubuntu",
+      "ssh_key_path": "~/.ssh/id_rsa"
+    }
+  ],
+  "replica_set_name": "hr_replica_set",
+  "database_name": "hr_management",
+  "admin_user": "hr_admin",
+  "admin_password": "hr_admin123"
+}
